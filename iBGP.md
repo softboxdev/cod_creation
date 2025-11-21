@@ -238,3 +238,57 @@ router bgp 65001
 5. **Использует LOCAL_PREF** для управления трафиком внутри AS
 
 iBGP обеспечивает согласованное распространение внешней маршрутной информации внутри автономной системы, работая поверх IGP (OSPF, EIGRP), который обеспечивает внутреннюю связность.
+
+## 1. Пример сетевой архитектуры компании
+
+**Компания:** "ТехноКорп" с автономной системой **AS 65001**
+
+```mermaid
+flowchart TD
+    A[Автономная система AS 65001<br/>ТехноКорп] --> B[Топология: Hub-and-Spoke<br/>с Route Reflector]
+    
+    B --> C[Дата-центр<br/>Москва]
+    B --> D[Филиал<br/>Санкт-Петербург]
+    B --> E[Филиал<br/>Новосибирск]
+    B --> F[Удаленные офисы]
+    
+    C --> G[Два провайдера:<br/>Провайдер А AS 64500<br/>Провайдер Б AS 64501]
+```
+
+## 2. Детальная архитектура сети
+
+```mermaid
+flowchart TD
+    subgraph DC[Дата-центр Москва]
+        RR[Route Reflector<br/>RR1<br/>10.1.1.1]
+        CORE[Core Router<br/>CR1<br/>10.1.1.2]
+        FW[Firewall<br/>FW1<br/>10.1.1.3]
+    end
+    
+    subgraph SPB[Филиал СПб]
+        RSPB[Router SPB<br/>10.2.1.1]
+    end
+    
+    subgraph NSK[Филиал Новосибирск]
+        RNSK[Router NSK<br/>10.3.1.1]
+    end
+    
+    subgraph PROVIDERS[Провайдеры]
+        P1[Провайдер А<br/>AS 64500]
+        P2[Провайдер Б<br/>AS 64501]
+    end
+    
+    %% iBGP соединения
+    RR -->|iBGP| CORE
+    RR -->|iBGP| RSPB
+    RR -->|iBGP| RNSK
+    RR -->|iBGP| FW
+    
+    %% eBGP соединения
+    CORE -->|eBGP| P1
+    CORE -->|eBGP| P2
+    
+    %% Транспортная сеть
+    CORE -->|OSPF| RSPB
+    CORE -->|OSPF| RNSK
+```
